@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang=\"en\">
+<head>
+    <meta charset=\"UTF-8\">
+    <title>Register</title>
+</head>
+<body>
+    <p id="welcome"> Welcome </p>
+    <div>
+        <input id="search" type="text" placeholder="Search..">
+    </div>
+    <div id = "searchResult">
+    </div>
+    <script>
+        let name, surname;
+        let cookies = document.cookie.split(";");
+        let hasToken = false;
+        for( let cookie of cookies) {
+            cookie = cookie.trim().toLowerCase();
+            let splitted = cookie.split("=");
+            if(splitted[0] === "token"){
+                hasToken = true;
+            } else if(splitted[0] === "lastsearch"){
+                document.getElementById("search").value = splitted[1];
+            } else if(splitted[0] === "name"){
+                name = splitted[1];
+            } else if(splitted[0] === "surname"){
+                surname = splitted[1];
+            }
+        }
+        if(!hasToken){
+            window.location = "/";
+        }
+        document.getElementById("welcome").innerText += " " + name + " " + surname;
+        document.getElementById("search").addEventListener("keyup", function (event) {
+            if(event.key === "Enter"){
+                let input = document.getElementById("search").value.trim();
+                document.cookie = "lastsearch=" + input;
+                let list = document.getElementById("searchResult");
+                let xhr = new XMLHttpRequest();
+                xhr.onreadystatechange = function() {
+                    if (this.readyState === 4 && this.status === 200) {
+                        while (list.firstChild) {
+                            list.removeChild(list.firstChild);
+                        }
+                        let users = this.responseText.split(", ");
+                        for( let u of users){
+                            var node = document.createElement("p");
+                            node.innerText = u;
+                            list.appendChild(node);
+                        }
+                    }
+                };
+                xhr.open("Post","http://localhost:8080/search");
+                xhr.send(input);
+            }
+        })
+
+    </script>
+
+</body>
+</html>
+
+
+<!DOCTYPE html>
+<html lang=\"en\">
+<head>
+       <meta charset=\"UTF-8\">
+       <title>Register</title>
+   </head>
+<script>
+    function sendUser(){
+        let xhr = new XMLHttpRequest();
+        let firstName = document.getElementById("firstName");
+        let lastName = document.getElementById("lastName");
+        xhr.onreadystatechange = function() {
+           if (this.readyState === 4 && this.status === 200) {
+               if(this.responseText === "invalid"){
+                   alert("firstname or lastname is invalid. Try again!");
+               }
+               window.location = '/'
+           }
+        };
+        xhr.open("POST","http://localhost:8080/login");
+        xhr.send(JSON.stringify({"firstName": firstName.value, "lastName": lastName.value}));
+    }
+    document.getElementById("register").addEventListener("click", function(event) {
+       window.location = "/register";
+    });
+</script>
+<body>
+        <label>FirstName</label>
+        <input id="firstName"/>
+        <label>LastName</label>
+        <input id="lastName"/>
+        <br>
+        <button onclick="sendUser()">sign up</button>
+        <p id="register"> Register </p>
+</body>
+</html>
